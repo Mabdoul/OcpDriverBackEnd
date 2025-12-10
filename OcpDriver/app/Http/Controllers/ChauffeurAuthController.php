@@ -3,50 +3,87 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Trip;
 use App\Models\Chauffeur;
-use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
-class ChauffeurAuthController extends Controller
+class TripController extends Controller
 {
-    // Register
-    public function register(Request $request)
+    // Client creates a trip
+    public function create(Request $request)
     {
         $data = $request->validate([
-            'full_name' => 'required|string',
-            'email' => 'required|email|unique:chauffeurs',
-            'password' => 'required|string|min:6',
-            'phone' => 'nullable|string',
-            'cin' => 'nullable|string'
+            'pickup_lat' => 'required',
+            'pickup_lng' => 'required',
+            'drop_lat' => 'required',
+            'drop_lng' => 'required',
         ]);
 
-        $data['password'] = Hash::make($data['password']);
-        $chauffeur = Chauffeur::create($data);
+        $data['user_id'] = auth()->user()->id;
+        $data['status'] = 'pending';
 
-        $token = JWTAuth::fromUser($chauffeur);
+        $trip = Trip::create($data);
 
         return response()->json([
-            'message' => 'Chauffeur registered',
-            'chauffeur' => $chauffeur,
-            'token' => $token
+            'message' => 'Trip created',
+            'trip' => $trip
         ]);
     }
 
-    // Login
-    public function login(Request $request)
+    // Chauffeur gets pending trips (ONLY IF ONLINE)
+    public function pendingTrips()
     {
-        $credentials = $request->only('email', 'password');
+        $chauffeur = auth('chauffeur')->user();
 
-        if (!$token = JWTAuth::attempt($credentials)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
+        if ($chauffeur->status !== 'online') {
+            return response()->json([
+                'message' => 'You must be online to receive trips'
+            ], 403);
         }
 
-        $chauffeur = auth()->user();
+        $trips = Trip::where('status', 'pending')->get();
+
+        return response()->json($trips);
+    }
+
+    // Chauffeur accepts a trip
+    public function acceptTrip(Request $request, $tripId)
+    {
+        $chauffeur = auth('chauffeur')->user();
+
+        $trip = Trip::findOrFail($tripId);
+
+        if ($trip->status !== 'pending') {
+            return response()->json(['message' => 'Trip already taken'], 400);
+        }
+
+        $trip->update([
+            'status' => 'accepted',
+            'chauffeur_id' => $chauffeur->id
+        ]);
 
         return response()->json([
-            'message' => 'Login successful',
-            'chauffeur' => $chauffeur,
-            'token' => $token
+            'message' => 'Trip accepted',
+            'trip' => $trip
+        ]);
+    }
+
+    // Chauffeur completes trip
+    public function completeTrip($tripId)
+    {
+        $chauffeur = auth('chauffeur')->user();
+
+        $trip = Trip::findOrFail($tripId);
+
+        if ($trip->chauffeur_id !== $chauffeur->id) {
+            return response()->json(['message' => 'This is not your trip'], 403);
+        }
+
+        $trip->update([
+            'status' => 'completed'
+        ]);
+
+        return response()->json([
+            'message' => 'Trip completed'
         ]);
     }
 }
