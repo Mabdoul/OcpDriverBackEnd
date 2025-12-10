@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chauffeurs', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        $table->id();
+        $table->string('full_name');
+        $table->string('email')->unique();
+        $table->string('password');
+        $table->string('phone')->nullable();
+        $table->string('cin')->nullable();
+        $table->enum('status', ['active', 'inactive'])->default('inactive');
+        $table->timestamps();
+    });
     }
 
     /**
