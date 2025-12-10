@@ -1,0 +1,41 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+           Schema::create('orders', function (Blueprint $table) {
+        $table->id();
+
+        // Client
+        $table->foreignId('user_id')->constrained('users');
+
+        // Chauffeur (nullable, حيت initial order ما فيهاش chauffeur)
+        $table->foreignId('chauffeur_id')->nullable()->constrained('chauffeurs');
+
+        $table->string('start_lat');
+        $table->string('start_lng');
+        $table->string('end_lat');
+        $table->string('end_lng');
+
+        $table->enum('status', ['pending', 'accepted', 'completed'])->default('pending');
+
+        $table->timestamps();
+    });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('trips');
+    }
+};
