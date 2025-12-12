@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Trip; // Trip model (table = orders)
+use App\Models\Trip;
 use App\Models\Chauffeur;
 
 class TripController extends Controller
 {
-    // Client creates a trip
+    // Client creates an order/trip
     public function createOrder(Request $request)
     {
         $data = $request->validate([
@@ -29,16 +29,16 @@ class TripController extends Controller
         ]);
     }
 
-    // Chauffeur gets pending trips (only online)
+    // Chauffeur gets pending trips (only if online)
     public function pendingOrders()
     {
         $chauffeur = auth('chauffeur')->user();
 
         if ($chauffeur->status !== 'online') {
-            return response()->json(['message'=>'You must be online to see trips'], 403);
+            return response()->json(['message' => 'You must be online to see trips'], 403);
         }
 
-        $trips = Trip::where('status','pending')->get();
+        $trips = Trip::where('status', 'pending')->get();
 
         return response()->json($trips);
     }
@@ -50,17 +50,17 @@ class TripController extends Controller
         $trip = Trip::findOrFail($id);
 
         if ($trip->status !== 'pending') {
-            return response()->json(['message'=>'Trip already taken'],400);
+            return response()->json(['message' => 'Trip already taken'], 400);
         }
 
         $trip->update([
-            'status'=>'accepted',
-            'chauffeur_id'=>$chauffeur->id
+            'status' => 'accepted',
+            'chauffeur_id' => $chauffeur->id
         ]);
 
         return response()->json([
-            'message'=>'Trip accepted',
-            'trip'=>$trip
+            'message' => 'Trip accepted',
+            'trip' => $trip
         ]);
     }
 
@@ -71,11 +71,11 @@ class TripController extends Controller
         $trip = Trip::findOrFail($id);
 
         if ($trip->chauffeur_id !== $chauffeur->id) {
-            return response()->json(['message'=>'This is not your trip'],403);
+            return response()->json(['message' => 'This is not your trip'], 403);
         }
 
-        $trip->update(['status'=>'completed']);
+        $trip->update(['status' => 'completed']);
 
-        return response()->json(['message'=>'Trip completed']);
+        return response()->json(['message' => 'Trip completed']);
     }
 }
