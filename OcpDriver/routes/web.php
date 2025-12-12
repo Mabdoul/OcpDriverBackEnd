@@ -1,4 +1,5 @@
 <?php
+require base_path('routes/api.php');
 
 use Illuminate\Support\Facades\Route;
 
