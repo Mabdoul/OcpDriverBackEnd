@@ -5,14 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Tymon\JWTAuth\Contracts\JWTSubject; // ✅ khass tdir import hna
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
-    /**
-     * Fields that can be mass assigned.
-     */
     protected $fillable = [
         'name',
         'email',
@@ -21,17 +19,11 @@ class User extends Authenticatable
         'password',
     ];
 
-    /**
-     * Fields hidden in API responses.
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Casts for attributes.
-     */
     protected function casts(): array
     {
         return [
@@ -40,11 +32,19 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Relations (Add later: trips)
-     */
     public function trips()
     {
         return $this->hasMany(Trip::class);
+    }
+
+    // ✅ Hadi methods li JWT katsst7aq
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }
