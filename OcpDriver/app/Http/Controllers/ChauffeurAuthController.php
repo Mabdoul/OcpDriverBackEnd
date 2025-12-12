@@ -3,30 +3,31 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
+use App\Models\Chauffeur;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class ClientAuthController extends Controller
+class ChauffeurAuthController extends Controller
 {
     // Register
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users',
+            'full_name' => 'required|string',
+            'email' => 'required|email|unique:chauffeurs',
             'password' => 'required|string|min:6',
-            'phone' => 'nullable|string'
+            'phone' => 'nullable|string',
+            'cin' => 'nullable|string'
         ]);
 
         $data['password'] = Hash::make($data['password']);
-        $user = User::create($data);
+        $chauffeur = Chauffeur::create($data);
 
-        $token = JWTAuth::fromUser($user);
+        $token = JWTAuth::fromUser($chauffeur);
 
         return response()->json([
-            'message' => 'Client registered',
-            'user' => $user,
+            'message' => 'Chauffeur registered',
+            'chauffeur' => $chauffeur,
             'token' => $token
         ]);
     }
@@ -36,16 +37,29 @@ class ClientAuthController extends Controller
     {
         $credentials = $request->only('email','password');
 
-        if (!$token = auth()->attempt($credentials)) {
+        if (!$token = auth('chauffeur')->attempt($credentials)) {
             return response()->json(['error'=>'Invalid credentials'],401);
         }
 
-        $user = auth()->user();
+        $chauffeur = auth('chauffeur')->user();
+        $chauffeur->update(['status'=>'online']); // online
 
         return response()->json([
             'message'=>'Login successful',
-            'user'=>$user,
+            'chauffeur'=>$chauffeur,
             'token'=>$token
         ]);
+    }
+
+    // Logout
+    public function logout()
+    {
+        $chauffeur = auth('chauffeur')->user();
+        if($chauffeur){
+            $chauffeur->update(['status'=>'offline']); // offline
+        }
+        auth('chauffeur')->logout();
+
+        return response()->json(['message'=>'Logged out']);
     }
 }
