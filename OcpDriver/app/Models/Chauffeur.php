@@ -3,33 +3,45 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Chauffeur extends Authenticatable implements JWTSubject
+class Chauffeur extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable;
 
+    /**
+     * Fields that can be mass assigned.
+     */
     protected $fillable = [
-        'full_name', 'email', 'password', 'phone', 'cin', 'status'
+        'full_name',
+        'email',
+        'password',
+        'phone',
+        'cin',
+        'status',
     ];
 
+    /**
+     * Hidden fields in API responses.
+     */
     protected $hidden = [
-        'password'
+        'password',
+        'remember_token',
     ];
 
-    // Relation
-    public function orders() {
+    /**
+     * Casts for fields.
+     */
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Relations
+     */
+    public function orders()
+    {
         return $this->hasMany(Order::class, 'chauffeur_id');
     }
-
-    // JWT
-    public function getJWTIdentifier() {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims() {
-        return [];
-    }
 }
-

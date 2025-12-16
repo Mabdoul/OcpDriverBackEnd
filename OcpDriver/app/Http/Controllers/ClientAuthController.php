@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ClientAuthController extends Controller
 {
@@ -22,30 +21,49 @@ class ClientAuthController extends Controller
         $data['password'] = Hash::make($data['password']);
         $user = User::create($data);
 
-        $token = JWTAuth::fromUser($user);
+        // Create Sanctum token
+        $token = $user->createToken('client-token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Client registered',
+            'message' => 'Client registered successfully',
             'user' => $user,
             'token' => $token
-        ]);
+        ], 201);
     }
 
     // Login
     public function login(Request $request)
     {
-        $credentials = $request->only('email','password');
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string'
+        ]);
 
-        if (!$token = auth()->attempt($credentials)) {
-            return response()->json(['error'=>'Invalid credentials'],401);
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        $user = auth()->user();
+        // Create Sanctum token
+        $token = $user->createToken('client-token')->plainTextToken;
 
         return response()->json([
-            'message'=>'Login successful',
-            'user'=>$user,
-            'token'=>$token
+            'message' => 'Login successful',
+            'user' => $user,
+            'token' => $token
         ]);
+    }
+
+    // Logout
+    public function logout(Request $request)
+    {
+        $user = $request->user(); // authenticated user
+
+        if ($user) {
+            $user->tokens()->delete(); // revoke all tokens
+        }
+
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }

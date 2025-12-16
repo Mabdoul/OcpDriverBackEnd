@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Tymon\JWTAuth\Contracts\JWTSubject; // ✅ khass tdir import hna
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * Fields that can be mass assigned.
+     */
     protected $fillable = [
         'name',
         'email',
@@ -19,32 +22,27 @@ class User extends Authenticatable implements JWTSubject
         'password',
     ];
 
+    /**
+     * Hidden fields in API responses.
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    /**
+     * Casts for fields.
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
 
+    /**
+     * Relations
+     */
     public function trips()
     {
         return $this->hasMany(Trip::class);
-    }
-
-    // ✅ Hadi methods li JWT katsst7aq
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims()
-    {
-        return [];
     }
 }

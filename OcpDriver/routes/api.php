@@ -5,6 +5,12 @@ use App\Http\Controllers\ClientAuthController;
 use App\Http\Controllers\ChauffeurAuthController;
 use App\Http\Controllers\TripController;
 
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
+
 // Client Auth
 Route::post('/client/register', [ClientAuthController::class, 'register']);
 Route::post('/client/login', [ClientAuthController::class, 'login']);
@@ -13,16 +19,28 @@ Route::post('/client/login', [ClientAuthController::class, 'login']);
 Route::post('/chauffeur/register', [ChauffeurAuthController::class, 'register']);
 Route::post('/chauffeur/login', [ChauffeurAuthController::class, 'login']);
 
-// Protected Routes (after login)
-Route::middleware('auth:api')->group(function() {
+/*
+|--------------------------------------------------------------------------
+| Protected Routes (Sanctum)
+|--------------------------------------------------------------------------
+| Routes that require authentication via Sanctum token
+*/
+
+Route::middleware('auth:sanctum')->group(function() {
+
     // Client Routes
-    Route::post('/trip/create', [TripController::class, 'createOrder']);
-    Route::get('/trip/history', [TripController::class, 'history']);
+    Route::prefix('client')->group(function() {
+        Route::post('/trip/create', [TripController::class, 'createOrder']);
+        Route::get('/trip/history', [TripController::class, 'history']);
+        Route::post('/logout', [ClientAuthController::class, 'logout']);
+    });
 
     // Chauffeur Routes
-    Route::get('/trips/pending', [TripController::class, 'pendingOrders']);
-    Route::post('/trip/{id}/accept', [TripController::class, 'acceptOrder']);
-    Route::post('/trip/{id}/complete', [TripController::class, 'completeOrder']);
+    Route::prefix('chauffeur')->group(function() {
+        Route::get('/trips/pending', [TripController::class, 'pendingOrders']);
+        Route::post('/trip/{id}/accept', [TripController::class, 'acceptOrder']);
+        Route::post('/trip/{id}/complete', [TripController::class, 'completeOrder']);
+        Route::post('/logout', [ChauffeurAuthController::class, 'logout']);
+    });
+
 });
-
-

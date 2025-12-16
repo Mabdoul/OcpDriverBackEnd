@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Chauffeur;
 use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ChauffeurAuthController extends Controller
 {
@@ -23,43 +22,53 @@ class ChauffeurAuthController extends Controller
         $data['password'] = Hash::make($data['password']);
         $chauffeur = Chauffeur::create($data);
 
-        $token = JWTAuth::fromUser($chauffeur);
+        // Create Sanctum token
+        $token = $chauffeur->createToken('chauffeur-token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Chauffeur registered',
+            'message' => 'Chauffeur registered successfully',
             'chauffeur' => $chauffeur,
             'token' => $token
-        ]);
+        ], 201);
     }
 
     // Login
     public function login(Request $request)
     {
-        $credentials = $request->only('email','password');
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string'
+        ]);
 
-        if (!$token = auth('chauffeur')->attempt($credentials)) {
-            return response()->json(['error'=>'Invalid credentials'],401);
+        $chauffeur = Chauffeur::where('email', $credentials['email'])->first();
+
+        if (!$chauffeur || !Hash::check($credentials['password'], $chauffeur->password)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        $chauffeur = auth('chauffeur')->user();
-        $chauffeur->update(['status'=>'online']); // online
+        $chauffeur->update(['status' => 'online']); // mark as online
+
+        // Create Sanctum token
+        $token = $chauffeur->createToken('chauffeur-token')->plainTextToken;
 
         return response()->json([
-            'message'=>'Login successful',
-            'chauffeur'=>$chauffeur,
-            'token'=>$token
+            'message' => 'Login successful',
+            'chauffeur' => $chauffeur,
+            'token' => $token
         ]);
     }
 
     // Logout
-    public function logout()
+    public function logout(Request $request)
     {
-        $chauffeur = auth('chauffeur')->user();
-        if($chauffeur){
-            $chauffeur->update(['status'=>'offline']); // offline
-        }
-        auth('chauffeur')->logout();
+        $chauffeur = $request->user('chauffeur'); // get the authenticated chauffeur
 
-        return response()->json(['message'=>'Logged out']);
+        if ($chauffeur) {
+            $chauffeur->update(['status' => 'offline']); // mark offline
+            // Revoke all tokens for this chauffeur
+            $chauffeur->tokens()->delete();
+        }
+
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }
