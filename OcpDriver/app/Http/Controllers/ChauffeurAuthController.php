@@ -12,7 +12,7 @@ class ChauffeurAuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'full_name' => 'required|string',
+            'name' => 'required|string',
             'email' => 'required|email|unique:chauffeurs',
             'password' => 'required|string|min:6',
             'phone' => 'nullable|string',

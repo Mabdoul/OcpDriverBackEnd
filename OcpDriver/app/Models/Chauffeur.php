@@ -14,7 +14,7 @@ class Chauffeur extends Authenticatable
      * Fields that can be mass assigned.
      */
     protected $fillable = [
-        'full_name',
+        'name',
         'email',
         'password',
         'phone',
