@@ -12,10 +12,10 @@ class TripController extends Controller
     public function createOrder(Request $request)
     {
         $data = $request->validate([
-            'pickup_lat' => 'required',
-            'pickup_lng' => 'required',
-            'drop_lat' => 'required',
-            'drop_lng' => 'required',
+            'start_lat' => 'required',
+            'start_lng' => 'required',
+            'end_lat' => 'required',
+            'end_lng' => 'required',
         ]);
 
         $data['user_id'] = auth()->user()->id;
