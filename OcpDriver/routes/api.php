@@ -22,6 +22,8 @@ Route::middleware('auth:sanctum')->group(function() {
         Route::post('/trip/create', [TripController::class, 'createOrder']);
         Route::get('/trip/history', [TripController::class, 'history']);
         Route::post('/logout', [ClientAuthController::class, 'logout']);
+        Route::get('/trip/latest', [TripController::class, 'latestTrip']);
+
     });
 
     // -------- CHAUFFEUR --------
@@ -32,6 +34,8 @@ Route::middleware('auth:sanctum')->group(function() {
         Route::post('/trip/{id}/complete', [TripController::class, 'completeOrder']);
         Route::get('/trip/history', [TripController::class, 'completedTrips']); // optional
         Route::post('/logout', [ChauffeurAuthController::class, 'logout']);
+
     });
 
 });
+
