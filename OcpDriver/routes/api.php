@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->group(function() {
 
     });
 
-    // -------- CHAUFFEUR --------
+    // ------ CHAUFFEUR ------
     Route::prefix('chauffeur')->group(function() {
         Route::get('/trips/pending', [TripController::class, 'pendingOrders']);
         Route::post('/trip/{id}/accept', [TripController::class, 'acceptOrder']);
